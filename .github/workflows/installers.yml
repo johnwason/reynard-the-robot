@@ -23,7 +23,7 @@ jobs:
           run: python -m build
         - name: Build Installer
           working-directory: ./packaging/nsis
-          run: makensis installer.nsi
+          run: makensis setup.nsi
         - name: upload
           uses: actions/upload-artifact@v2
           with:
@@ -31,4 +31,3 @@ jobs:
             path: |
              ./dist/*.whl
              ./packaging/nsis/*.exe
-             
