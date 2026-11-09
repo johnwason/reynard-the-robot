@@ -16,7 +16,9 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install NSIS
-      run: choco install nsis -y
+      run: |
+        choco install nsis -y
+        Add-Content $env:GITHUB_PATH "${env:ProgramFiles(x86)}\NSIS"
     - name: pip install
       run: |
         pip install .[gui]

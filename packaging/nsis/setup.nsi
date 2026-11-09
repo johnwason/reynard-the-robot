@@ -19,7 +19,7 @@
 
 ; General
 Name "${APPNAME}"
-Outfile "reynand-the-robot-${VERSIONMAJOR}.${VERSIONMINOR}.${VERSIONBUILD}-setup-win64.exe"
+Outfile "reynard-the-robot-${VERSIONMAJOR}.${VERSIONMINOR}.${VERSIONBUILD}-setup-win64.exe"
 InstallDir "$PROGRAMFILES64\${COMPANYNAME}\${APPNAME}"
 
 
