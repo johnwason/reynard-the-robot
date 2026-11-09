@@ -40,6 +40,12 @@ end
 """
 
 
+def _check_finite(*values):
+    # NaN compares false with everything, so it would pass any range check
+    if not np.all(np.isfinite(values)):
+        raise RR.InvalidArgumentException("Values must be finite numbers")
+
+
 class ReynardImpl:
 
     def __init__(self, reynard, node=None):
@@ -67,6 +73,7 @@ class ReynardImpl:
         self.new_message.fire(message)
 
     def teleport(self, x, y):
+        _check_finite(x, y)
         with self._lock:
             if x > 1 or x < -1 or y > 0.5 or y < -0.5:
                 raise RR.InvalidArgumentException("Teleport target position is out of range")
@@ -76,6 +83,7 @@ class ReynardImpl:
             self._reynard.teleport(x1, y1)
 
     def setf_arm_position(self, q1, q2, q3):
+        _check_finite(q1, q2, q3)
         with self._lock:
             # Convert from radians to degrees
             q1_1 = np.rad2deg(q1)
@@ -91,11 +99,13 @@ class ReynardImpl:
         return np.array(self._reynard.robot_position, dtype=np.float64) * 1e-3
 
     def drive_robot(self, vel_x, vel_y, timeout, wait):
+        _check_finite(vel_x, vel_y, timeout)
         vel_x_1 = vel_x * 1e3
         vel_y_1 = vel_y * 1e3
         self._reynard.drive_robot(vel_x_1, vel_y_1, timeout, wait)
 
     def drive_arm(self, q1, q2, q3, timeout, wait):
+        _check_finite(q1, q2, q3, timeout)
         q1_1 = np.rad2deg(q1)
         q2_1 = np.rad2deg(q2)
         q3_1 = np.rad2deg(q3)
@@ -114,6 +124,7 @@ class ReynardImpl:
     def color(self, c):
         if len(c) != 3:
             raise RR.InvalidArgumentException("Expected an array with length of 3")
+        _check_finite(*c)
         if np.any(np.array(c) < 0) or np.any(np.array(c) > 1):
             raise RR.InvalidArgumentException("Invalid color value")
         self._reynard.color = c
@@ -121,10 +132,11 @@ class ReynardImpl:
     def _timer_cb(self, evt):
         s = self._reynard_state_type()
         s.time = self._reynard.time
-        s.robot_position = np.array(self._reynard.robot_position, dtype=np.float64)
-        s.arm_position = np.array(self._reynard.arm_position, dtype=np.float64)
-        s.robot_velocity = np.array(self._reynard.robot_velocity, dtype=np.float64)
-        s.arm_velocity = np.array(self._reynard.arm_velocity, dtype=np.float64)
+        # Convert from mm to m, and from degrees to radians
+        s.robot_position = np.array(self._reynard.robot_position, dtype=np.float64) * 1e-3
+        s.arm_position = np.deg2rad(np.array(self._reynard.arm_position, dtype=np.float64))
+        s.robot_velocity = np.array(self._reynard.robot_velocity, dtype=np.float64) * 1e-3
+        s.arm_velocity = np.deg2rad(np.array(self._reynard.arm_velocity, dtype=np.float64))
 
         self.state.OutValue = s
 
