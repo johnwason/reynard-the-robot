@@ -3,38 +3,75 @@ import threading
 import numpy as np
 
 _reynard_robdef = """
+## Reynard the Robot, a simulated 2D cartoon robot for learning Robot Raconteur.
+## A mobile base carries a 3 joint planar arm. The GUI is at http://localhost:29201.
+##
+## Units are SI: meters, seconds, radians. The room is 2 m x 1 m with the origin
+## at its center, +x right and +y up. The base position x is limited to -1 to 1 m,
+## and y to -0.5 to 0.5 m.
+##
+## Kinematics: the shoulder (joint 1) is 0.095 m above the base position. Link 1
+## and link 2 are 0.17 m, and the tool is 0.06 m. Joint angles are relative to
+## the previous link, counterclockwise positive, and all zero points the arm to +x.
+## Tool tip = base + (0, 0.095) + 0.17*[cos(q1), sin(q1)]
+## + 0.17*[cos(q1+q2), sin(q1+q2)] + 0.06*[cos(q1+q2+q3), sin(q1+q2+q3)]
+##
+## Joint limits: q1 -0.17 to 3.14 rad, q2 -2.44 to 2.44 rad, q3 -3.05 to 3.05 rad.
+## Speed limits: 0.1 m/s for each base axis and 1.75 rad/s for each joint.
 service experimental.reynard_the_robot
 
 stdver 0.10
 
+## State of Reynard, updated every 0.05 s
 struct ReynardState
+    ## Time in seconds from an arbitrary start
     field double time
+    ## Base position [x, y] in m
     field double[] robot_position
+    ## Arm joint angles [q1, q2, q3] in rad
     field double[] arm_position
+    ## Base velocity [vx, vy] in m/s
     field double[] robot_velocity
+    ## Arm joint velocities [q1, q2, q3] in rad/s
     field double[] arm_velocity
 end
 
+## Reynard the Robot
 object Reynard
 
+    ## Move the base instantly to (x, y) in m, and stop it.
+    ## Raises an error if the position is outside the room.
     function void teleport(double x, double y)
 
+    ## Set the arm joint angles instantly, in rad. Values are clamped to the joint limits.
     function void setf_arm_position(double q1, double q2, double q3)
 
+    ## Arm joint angles [q1, q2, q3] in rad
     function double[] getf_arm_position()
 
+    ## Base position [x, y] in m
     property double[] robot_position [readonly]
 
+    ## Drive the base at (vel_x, vel_y) in m/s, clamped to 0.1 m/s per axis.
+    ## It stops at the room edges, and after timeout s, or never if timeout < 0.
+    ## If wait is true, returns after timeout.
     function void drive_robot(double vel_x, double vel_y, double timeout, bool wait)
 
+    ## Drive the arm joints at velocities q1, q2, q3 in rad/s, clamped to 1.75 rad/s.
+    ## Joints stop at their limits, and after timeout s, or never if timeout < 0.
+    ## If wait is true, returns after timeout.
     function void drive_arm(double q1, double q2, double q3, double timeout, bool wait)
 
+    ## Show a speech bubble with the message in the GUI
     function void say(string message)
 
+    ## Body color [r, g, b], each 0 to 1
     property double[] color
 
+    ## Robot state, updated every 0.05 s
     wire ReynardState state [readonly]
 
+    ## A message typed by the user in the GUI
     event new_message(string message)
 end
 """
